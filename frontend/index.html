@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Schedule - Dark Mode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <div class="sparkle-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" fill="url(#sparkleGradient)"/>
+                    <defs>
+                        <linearGradient id="sparkleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#8B5CF6"/>
+                            <stop offset="50%" style="stop-color:#EC4899"/>
+                            <stop offset="100%" style="stop-color:#06B6D4"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="title">Create your schedule now!</h1>
+            <p class="subtitle">Transform your conversations into organized schedules with AI-powered intelligence</p>
+        </div>
+
+        <div id="login-container">
+            <a href="/auth/google" class="google-login-button">
+                <span class="google-g-icon">G</span>
+                <span>Sign in with Google</span>
+            </a>
+        </div>
+        
+        <div class="input-wrapper" id="chat-container" style="display: none;">
+            <div class="input-container">
+                <textarea class="input-field" id="chatInput" placeholder="Paste your conversation here and let AI take over the magic"></textarea>
+                <button class="submit-button" id="submitButton">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <span>Lightning Fast</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🤖</div>
+                <span>AI Powered</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🧠</div>
+                <span>Smart Organization</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    <script>
+        // Check if the user is authenticated
+        fetch('/api/is-authenticated')
+            .then(response => response.json())
+            .then(data => {
+                if (data.isAuthenticated) {
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('chat-container').style.display = 'block';
+                } else {
+                    document.getElementById('login-container').style.display = 'block';
+                    document.getElementById('chat-container').style.display = 'none';
+                }
+            });
+
+        document.getElementById('submitButton').addEventListener('click', async () => {
+            const chatInput = document.getElementById('chatInput').value;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: chatInput, timezone: timezone })
+                });
+                const data = await response.json();
+                console.log(data);
+                if (data.success) {
+                    // Optionally store event link for confirmation page
+                    if (data.eventLink) {
+                        localStorage.setItem('eventLink', data.eventLink);
+                    } else {
+                        localStorage.removeItem('eventLink');
+                    }
+                    window.location.href = 'confirmation.html';
+                } else {
+                    alert(data.error || 'Failed to create schedule or calendar event.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while sending the message.');
+            }
+        });
+    </script>
+</body>
+</html>

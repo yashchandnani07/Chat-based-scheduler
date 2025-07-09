@@ -6,7 +6,7 @@ const path = require('path');
 const session = require('express-session');
 const { parseChat } = require('./chat-parser.js');
 const connectDB = require('./config/db');
-const Schedule = require('./models/schedule.js');
+const Schedule = require('./models/Schedule.js');
 const { oauth2Client, createCalendarEvent } = require('./config/google-calendar.js');
 
 connectDB();

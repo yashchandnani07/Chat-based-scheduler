@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -9,33 +8,33 @@ const connectDB = require('./config/db');
 const Schedule = require('./models/Schedule.js');
 const { oauth2Client, createCalendarEvent } = require('./config/google-calendar.js');
 
+// Initialize database connection
 connectDB();
 
 const app = express();
 const port = 3000;
 
+// Configure middleware
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+// Configure session management
 app.use(session({
     secret: 'your_secret_key', 
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to false for local development (HTTP)
+    cookie: { secure: false }
 }));
 
-// Middleware to set OAuth2 credentials from session
+// Load OAuth2 credentials from session
 app.use((req, res, next) => {
     if (req.session.tokens) {
-        console.log('Loading tokens from session:', req.session.tokens);
         oauth2Client.setCredentials(req.session.tokens);
-    } else {
-        console.log('No tokens found in session.');
     }
     next();
 });
 
-// Google OAuth2 routes
+// Google OAuth2 authentication routes
 app.get('/auth/google', (req, res) => {
     const url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -44,13 +43,13 @@ app.get('/auth/google', (req, res) => {
     res.redirect(url);
 });
 
+// Handle OAuth2 callback and store tokens
 app.get('/auth/google/callback', async (req, res) => {
     const { code } = req.query;
     try {
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
-        req.session.tokens = tokens; // Store tokens in session
-        console.log('Tokens stored in session:', req.session.tokens);
+        req.session.tokens = tokens;
         res.redirect('/');
     } catch (error) {
         console.error('Error getting OAuth tokens:', error.message);
@@ -58,23 +57,31 @@ app.get('/auth/google/callback', async (req, res) => {
     }
 });
 
+// Check if user is authenticated
 app.get('/api/is-authenticated', (req, res) => {
     const isAuthenticated = !!(req.session.tokens && req.session.tokens.access_token);
     res.json({ isAuthenticated });
 });
 
-
-
+// Main endpoint: Parse chat message and create calendar event
 app.post('/api/chat', async (req, res) => {
-    const { message, timezone } = req.body;
-    const parsedSchedule = await parseChat(message, timezone);
+    const { message } = req.body;
+    const parsedSchedule = await parseChat(message, 'Asia/Kolkata');
     console.log('Parsed schedule from chat:', parsedSchedule);
 
-    // Validate and sanitize startTime and endTime
+    // Validate and ensure proper Date objects
     let startTime = new Date(parsedSchedule.startTime);
     let endTime = new Date(parsedSchedule.endTime);
     const now = new Date();
-    if (isNaN(startTime) || startTime < now) {
+    
+    console.log('Validation check:', {
+        startTime: startTime,
+        now: now,
+        isValid: !isNaN(startTime.getTime()),
+        isFuture: startTime > now
+    });
+    
+    if (isNaN(startTime.getTime()) || startTime < now) {
         console.warn('Parsed startTime missing or invalid.');
         return res.status(400).json({ success: false, error: 'Could not parse a valid future start time from your message. Please specify a date and time.' });
     }
@@ -85,7 +92,7 @@ app.post('/api/chat', async (req, res) => {
     parsedSchedule.startTime = startTime;
     parsedSchedule.endTime = endTime;
 
-    // Ensure user is authenticated with Google
+    // Check authentication
     if (!req.session.tokens || !req.session.tokens.access_token) {
         return res.status(401).json({
             success: false,
@@ -95,12 +102,13 @@ app.post('/api/chat', async (req, res) => {
     }
 
     try {
+        // Save schedule to database
         const newSchedule = new Schedule(parsedSchedule);
         await newSchedule.save();
 
-        // Automatically create Google Calendar event
+        // Create Google Calendar event
         oauth2Client.setCredentials(req.session.tokens);
-        const calendarEvent = await createCalendarEvent(newSchedule, oauth2Client, timezone || 'UTC');
+        const calendarEvent = await createCalendarEvent(newSchedule, oauth2Client, 'Asia/Kolkata');
         newSchedule.eventLink = calendarEvent.htmlLink || null;
         await newSchedule.save();
 
@@ -111,14 +119,15 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+
+// Get latest created schedule
 app.get('/api/schedule/latest', async (req, res) => {
     try {
         const latest = await Schedule.findOne().sort({ _id: -1 });
         if (!latest) {
             return res.status(404).json({ success: false, error: 'No schedules found' });
         }
-        // Try to provide calendar link if possible (if stored or can be reconstructed)
-        // For now, just send the schedule fields
+        
         res.json({
             success: true,
             schedule: {
@@ -126,7 +135,7 @@ app.get('/api/schedule/latest', async (req, res) => {
                 title: latest.title,
                 startTime: latest.startTime,
                 endTime: latest.endTime,
-                eventLink: latest.eventLink || null, // Include eventLink if available
+                eventLink: latest.eventLink || null, 
             }
         });
     } catch (err) {
@@ -135,6 +144,7 @@ app.get('/api/schedule/latest', async (req, res) => {
     }
 });
 
+// Get all schedules
 app.get('/api/schedules', async (req, res) => {
     try {
         const schedules = await Schedule.find();
@@ -145,10 +155,12 @@ app.get('/api/schedules', async (req, res) => {
     }
 });
 
+// Serve frontend
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
+// Start server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

@@ -10,6 +10,18 @@ Unlock effortless organization with this sophisticated Node.js chat-based schedu
 - **Database Persistence**: Stores schedule data for reliable access.
 - **User-Friendly Frontend**: An intuitive web interface for interaction.
 
+## 🖼️ Screenshots
+
+### Event Creation Success
+![Schedule Created](screenshots/Schedule%20Created.png)
+
+### Chat-Based Input
+![Chat Input](screenshots/Chat%20Input.png)
+
+### Calendar Integration
+![Google Calendar Event](screenshots/Google%20Calendar%20Event.png)
+
+
 ## Technologies Used
 - **Backend**: Node.js, Express (inferred), `dotenv`, `chrono-node`, `axios`
 - **Database**: (Based on `db.js`, likely MongoDB or a similar NoSQL DB, or a SQL DB with an ORM)
@@ -33,12 +45,14 @@ Unlock effortless organization with this sophisticated Node.js chat-based schedu
 ### Steps
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/chat-based-scheduler.git
-    cd chat-based-scheduler
-    ```
+    git clone https://github.com/yashchandnani07/Chat-based-scheduler.git
+
+    cd Chat-based-scheduler
+    ``` 
 2.  **Install dependencies:**
     ```bash
     npm install
+    npm install openai chrono-node express dotenv googleapis
     ```
 3.  **Configure Environment Variables:**
     Create a `.env` file in the root directory of the project. This file will store sensitive information like API keys and database connection strings.
@@ -62,10 +76,8 @@ Unlock effortless organization with this sophisticated Node.js chat-based schedu
     The server will typically run on `http://localhost:3000` (or the `PORT` specified in your `.env`).
 
 ## Usage
-Once the server is running, open `frontend/index.html` in your web browser. You can then interact with the chat interface to schedule and manage your events using natural language commands.
+Once the server is running, open `localhost:3000` in your web browser. You can then interact with the chat interface to schedule and manage your events using natural language commands.
 
 ## Contributing
 Contributions are welcome! Please feel free to open issues or submit pull requests.
 
-## License
-This project is licensed under the [MIT License](LICENSE). (You might need to create a LICENSE file if you haven't already)

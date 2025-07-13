@@ -24,7 +24,7 @@ Unlock effortless organization with this sophisticated Node.js chat-based schedu
 
 ## Technologies Used
 - **Backend**: Node.js, Express (inferred), `dotenv`, `chrono-node`, `axios`
-- **Database**: (Based on `db.js`, likely MongoDB or a similar NoSQL DB, or a SQL DB with an ORM)
+- **Database**: (Based on `db.js`, (MongoDB)
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Version Control**: Git
 

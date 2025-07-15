@@ -14,6 +14,11 @@ connectDB();
 const app = express();
 const port = 3000;
 
+// Serve Google verification HTML
+app.get('/googlefc7477c6e3fb4baa.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'googlefc7477c6e3fb4baa.html'));
+});
+
 // Configure middleware
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'frontend')));

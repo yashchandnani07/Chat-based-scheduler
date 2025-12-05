@@ -9,10 +9,10 @@ dayjs.extend(timezone);
 
 require('dotenv').config();
 
-// Initialize OpenAI client with custom API
+// Initialize OpenAI client with Groq API
 const client = new OpenAI({
-    apiKey: process.env.A4F_API_KEY,
-    baseURL: process.env.A4F_BASE_URL,
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
 });
 
 // Extract and format event title from AI response
@@ -36,10 +36,10 @@ function extractTitle(message, aiProvidedTitle) {
 // Parse chat message and extract event details using AI
 const parseChat = async (message, timezone = 'UTC') => {
     const now = dayjs().tz(timezone);
-    
+
     // Send message to AI for parsing with timezone context
     const completion = await client.chat.completions.create({
-        model: "provider-3/gpt-4",
+        model: "openai/gpt-oss-20b",
         messages: [
             {
                 role: "system",
@@ -78,22 +78,22 @@ const parseChat = async (message, timezone = 'UTC') => {
 
     // Convert AI-provided local times to timezone-aware Date objects
     let startTime, endTime;
-    
+
     try {
         // Parse times as local timezone and convert to Date objects
         startTime = dayjs.tz(parsedContent.startTime, timezone).toDate();
         endTime = dayjs.tz(parsedContent.endTime, timezone).toDate();
-        
+
         // Validate parsed dates
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
             throw new Error('Invalid date parsing');
         }
-        
+
         // Ensure end time is after start time
         if (endTime <= startTime) {
             endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
         }
-        
+
     } catch (error) {
         console.error('Error parsing AI-provided times:', error);
         // Fallback to current time + 1 hour
